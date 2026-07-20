@@ -1,23 +1,17 @@
 import { supabase } from "./supabase";
 
-export type Staff = {
+export type Expense = {
   id?: number;
-  staff_name: string;
-  phone: string;
-  aadhaar: string;
-  age: number;
-  address: string;
-  qualification: string;
-  experience: string;
-  salary: number;
-  joining_date: string | null;
-  status: string;
+  expense_name: string;
+  amount: number;
+  expense_date: string | null;
+  payment_method: string;
   notes: string;
 };
 
-export async function getStaff() {
+export async function getExpenses() {
   const { data, error } = await supabase
-    .from("staff")
+    .from("expenses")
     .select("*")
     .order("id", { ascending: false });
 
@@ -26,10 +20,12 @@ export async function getStaff() {
   return data ?? [];
 }
 
-export async function addStaff(staff: Staff) {
+export async function addExpense(
+  expense: Expense
+) {
   const { data, error } = await supabase
-    .from("staff")
-    .insert([staff])
+    .from("expenses")
+    .insert([expense])
     .select();
 
   if (error) throw error;
@@ -37,13 +33,13 @@ export async function addStaff(staff: Staff) {
   return data ?? [];
 }
 
-export async function updateStaff(
+export async function updateExpense(
   id: number,
-  staff: Staff
+  expense: Expense
 ) {
   const { data, error } = await supabase
-    .from("staff")
-    .update(staff)
+    .from("expenses")
+    .update(expense)
     .eq("id", id)
     .select();
 
@@ -52,9 +48,11 @@ export async function updateStaff(
   return data ?? [];
 }
 
-export async function deleteStaff(id: number) {
+export async function deleteExpense(
+  id: number
+) {
   const { error } = await supabase
-    .from("staff")
+    .from("expenses")
     .delete()
     .eq("id", id);
 

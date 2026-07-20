@@ -32,9 +32,8 @@ export default function Hero() {
           </span>
 
           <h1 className="mt-6 text-6xl md:text-7xl lg:text-8xl font-black leading-tight text-white">
-  Ram's Home Care
+  Raam's Home Nursing Services
 </h1>
-
 <h2 className="mt-4 text-2xl md:text-4xl font-semibold text-cyan-300">
   Premium Home Nursing Services
 </h2>

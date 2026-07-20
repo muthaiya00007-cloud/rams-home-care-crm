@@ -1,99 +1,209 @@
 "use client";
 
-import { useState } from "react";
-import { addStaff } from "../lib/staff";
+import { useEffect, useState } from "react";
 
-type Props = {
-  open: boolean;
-  onClose: () => void;
-};
+import Sidebar from "@/components/admin/Sidebar";
+import Header from "@/components/admin/Header";
 
-export default function StaffModal({ open, onClose }: Props) {
-  const [staffName, setStaffName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
+import { getCustomers } from "@/components/lib/customers";
+import { getStaff } from "@/components/lib/staff";
+import { getIncome } from "@/components/lib/income";
+import { getExpenses } from "@/components/lib/expenses";
 
-  if (!open) return null;
+export default function DashboardPage() {
+  const [customerCount, setCustomerCount] = useState(0);
+  const [staffCount, setStaffCount] = useState(0);
 
-  async function handleSave() {
-    if (!staffName || !phone || !address) {
-      alert("Please fill all fields");
-      return;
-    }
+  const [totalIncome, setTotalIncome] = useState(0);
+  const [totalExpense, setTotalExpense] = useState(0);
 
-    const { error } = await addStaff({
-      staff_name: staffName,
-      phone,
-      address,
-      aadhaar: "",
-      age: 0,
-      qualification: "",
-      experience: "",
-      salary: 0,
-      joining_date: null,
-      status: "Active",
-      notes: "",
-    });
+  const [profit, setProfit] = useState(0);
 
-    if (error) {
+  const [expired, setExpired] = useState(0);
+  const [dueSoon, setDueSoon] = useState(0);
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  async function loadDashboard() {
+    try {
+      const customers = await getCustomers();
+      const staff = await getStaff();
+      const income = await getIncome();
+      const expenses = await getExpenses();
+
+      setCustomerCount(customers.length);
+      setStaffCount(staff.length);
+
+      const incomeTotal = income.reduce(
+        (sum: number, item: any) => sum + Number(item.amount),
+        0
+      );
+
+      const expenseTotal = expenses.reduce(
+        (sum: number, item: any) => sum + Number(item.amount),
+        0
+      );
+
+      setTotalIncome(incomeTotal);
+      setTotalExpense(expenseTotal);
+      setProfit(incomeTotal - expenseTotal);
+
+      let expiredCount = 0;
+      let dueSoonCount = 0;
+      let activeCount = 0;
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      customers.forEach((customer) => {
+        if (!customer.renewal_date) {
+          activeCount++;
+          return;
+        }
+
+        const renewal = new Date(customer.renewal_date);
+        renewal.setHours(0, 0, 0, 0);
+
+        const diff = Math.ceil(
+          (renewal.getTime() - today.getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
+
+        if (diff < 0) {
+          expiredCount++;
+        } else if (diff <= 7) {
+          dueSoonCount++;
+        } else {
+          activeCount++;
+        }
+      });
+
+      setExpired(expiredCount);
+      setDueSoon(dueSoonCount);
+      setActive(activeCount);
+
+    } catch (error) {
       console.error(error);
-      alert(error.message);
-      return;
     }
-
-    alert("Staff added successfully!");
-
-    setStaffName("");
-    setPhone("");
-    setAddress("");
-
-    onClose();
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white w-full max-w-lg rounded-2xl p-6 shadow-xl">
-        <h2 className="text-2xl font-bold mb-6">Add Staff</h2>
+    <div className="space-y-6">
 
-        <div className="space-y-4">
-          <input
-            className="w-full border rounded-lg p-3"
-            placeholder="Staff Name"
-            value={staffName}
-            onChange={(e) => setStaffName(e.target.value)}
-          />
+      <h1 className="text-3xl font-bold">
+        Dashboard
+      </h1>
 
-          <input
-            className="w-full border rounded-lg p-3"
-            placeholder="Phone Number"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-          />
-
-          <textarea
-            className="w-full border rounded-lg p-3"
-            placeholder="Address"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-          />
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+                <div className="rounded-2xl bg-blue-600 p-6 text-white shadow-lg">
+          <p className="text-sm opacity-80">Customers</p>
+          <h2 className="mt-2 text-4xl font-bold">
+            {customerCount}
+          </h2>
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-lg bg-gray-200"
-          >
-            Cancel
-          </button>
-
-          <button
-            onClick={handleSave}
-            className="px-5 py-2 rounded-lg bg-blue-600 text-white"
-          >
-            Save
-          </button>
+        <div className="rounded-2xl bg-green-600 p-6 text-white shadow-lg">
+          <p className="text-sm opacity-80">Staff</p>
+          <h2 className="mt-2 text-4xl font-bold">
+            {staffCount}
+          </h2>
         </div>
+
+        <div className="rounded-2xl bg-purple-600 p-6 text-white shadow-lg">
+          <p className="text-sm opacity-80">Total Income</p>
+          <h2 className="mt-2 text-4xl font-bold">
+            ₹{totalIncome.toLocaleString()}
+          </h2>
+        </div>
+
+        <div className="rounded-2xl bg-red-600 p-6 text-white shadow-lg">
+          <p className="text-sm opacity-80">Total Expense</p>
+          <h2 className="mt-2 text-4xl font-bold">
+            ₹{totalExpense.toLocaleString()}
+          </h2>
+        </div>
+
       </div>
+
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+
+        <div className="rounded-2xl border-l-4 border-red-500 bg-white p-5 shadow">
+          <p className="text-gray-500">Expired</p>
+          <h3 className="mt-2 text-3xl font-bold text-red-600">
+            {expired}
+          </h3>
+        </div>
+
+        <div className="rounded-2xl border-l-4 border-yellow-500 bg-white p-5 shadow">
+          <p className="text-gray-500">Due in 7 Days</p>
+          <h3 className="mt-2 text-3xl font-bold text-yellow-600">
+            {dueSoon}
+          </h3>
+        </div>
+
+        <div className="rounded-2xl border-l-4 border-green-500 bg-white p-5 shadow">
+          <p className="text-gray-500">Active</p>
+          <h3 className="mt-2 text-3xl font-bold text-green-600">
+            {active}
+          </h3>
+        </div>
+
+        <div className="rounded-2xl border-l-4 border-indigo-500 bg-white p-5 shadow">
+          <p className="text-gray-500">Profit</p>
+          <h3 className="mt-2 text-3xl font-bold text-indigo-600">
+            ₹{profit.toLocaleString()}
+          </h3>
+        </div>
+
+      </div>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+
+        <div className="rounded-2xl bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-bold">
+            📊 Monthly Analytics
+          </h2>
+
+          <div className="flex h-64 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 text-gray-500">
+            Charts Coming Soon...
+          </div>
+        </div>
+
+        <div className="rounded-2xl bg-white p-6 shadow">
+          <h2 className="mb-4 text-xl font-bold">
+            🔔 Renewal Summary
+          </h2>
+
+          <div className="space-y-3">
+
+            <div className="flex items-center justify-between rounded-lg bg-red-50 p-4">
+              <span>Expired Customers</span>
+              <span className="font-bold text-red-600">
+                {expired}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg bg-yellow-50 p-4">
+              <span>Due in 7 Days</span>
+              <span className="font-bold text-yellow-600">
+                {dueSoon}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg bg-green-50 p-4">
+              <span>Active Customers</span>
+              <span className="font-bold text-green-600">
+                {active}
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
     </div>
   );
 }

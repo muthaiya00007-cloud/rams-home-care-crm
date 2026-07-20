@@ -1,176 +1,129 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Sidebar from "@/components/admin/Sidebar";
-import Header from "@/components/admin/Header";
+import { useEffect, useMemo, useState } from "react";
+
 import CustomerModal from "@/components/admin/CustomerModal";
+import CustomerTable from "@/components/admin/CustomerTable";
+
 import {
+  Customer,
   getCustomers,
   deleteCustomer,
-  Customer,
 } from "@/components/lib/customers";
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+
   const [open, setOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
-  const loadCustomers = async () => {
-    setLoading(true);
+  const [editCustomer, setEditCustomer] =
+    useState<Customer | null>(null);
 
-    const { data, error } = await getCustomers();
+  const [selectedCustomer, setSelectedCustomer] =
+    useState<Customer | null>(null);
 
-    if (error) {
+  async function loadCustomers() {
+    try {
+      const data = await getCustomers();
+      setCustomers(data);
+    } catch (error) {
       console.error(error);
-      setCustomers([]);
-    } else {
-      setCustomers(data ?? []);
     }
-
-    setLoading(false);
-  };
+  }
 
   useEffect(() => {
     loadCustomers();
   }, []);
 
-  const handleDelete = async (id: number) => {
-    const ok = confirm("Delete this customer?");
-
-    if (!ok) return;
-
-    const { error } = await deleteCustomer(id);
-
-    if (error) {
-      alert(error.message);
-      return;
+  async function handleDelete(id: number) {
+    try {
+      await deleteCustomer(id);
+      loadCustomers();
+    } catch (error) {
+      console.error(error);
+      alert("Unable to delete customer.");
     }
+  }
 
-    loadCustomers();
-  };
+  const filteredCustomers = useMemo(() => {
+    return customers.filter((customer) => {
+
+      return (
+        customer.customer_name
+          .toLowerCase()
+          .includes(search.toLowerCase()) ||
+
+        customer.phone
+          .includes(search) ||
+
+        customer.assigned_staff
+          .toLowerCase()
+          .includes(search.toLowerCase())
+      );
+
+    });
+  }, [customers, search]);
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <Sidebar />
 
-      <div className="flex-1">
-        <Header />
+    <div className="space-y-6">
 
-        <main className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-bold">
-              Customers
-            </h1>
+      <div className="flex items-center justify-between">
 
-            <button
-              onClick={() => setOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg"
-            >
-              + Add Customer
-            </button>
-          </div>
+        <h1 className="text-3xl font-bold">
+          Customers
+        </h1>
 
-          <div className="bg-white rounded-xl shadow overflow-x-auto">
-            <table className="min-w-full">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="text-left px-6 py-4">
-                    Name
-                  </th>
+        <button
+          onClick={() => {
+            setEditCustomer(null);
+            setOpen(true);
+          }}
+          className="rounded-xl bg-blue-600 px-5 py-3 text-white"
+        >
+          + Add Customer
+        </button>
 
-                  <th className="text-left px-6 py-4">
-                    Phone
-                  </th>
-
-                  <th className="text-left px-6 py-4">
-                    Address
-                  </th>
-
-                  <th className="text-left px-6 py-4">
-                    Staff
-                  </th>
-
-                  <th className="text-left px-6 py-4">
-                    Renewal
-                  </th>
-
-                  <th className="text-center px-6 py-4">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="text-center py-10"
-                    >
-                      Loading...
-                    </td>
-                  </tr>
-                ) : customers.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="text-center py-10"
-                    >
-                      No Customers Found
-                    </td>
-                  </tr>
-                ) : (
-                  customers.map((customer) => (
-                    <tr
-                      key={customer.id}
-                      className="border-t hover:bg-gray-50"
-                    >
-                      <td className="px-6 py-4">
-                        {customer.customer_name}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {customer.phone}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {customer.address}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {customer.assigned_staff || "-"}
-                      </td>
-
-                      <td className="px-6 py-4">
-                        {customer.renewal_date || "-"}
-                      </td>
-
-                      <td className="px-6 py-4 text-center">
-                        <button
-                          onClick={() =>
-                            handleDelete(customer.id!)
-                          }
-                          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <CustomerModal
-            open={open}
-            onClose={() => {
-              setOpen(false);
-              loadCustomers();
-            }}
-          />
-        </main>
       </div>
-    </div>
+
+      <input
+        className="w-full rounded-xl border p-3"
+        placeholder="Search customer..."
+        value={search}
+        onChange={(e) =>
+          setSearch(e.target.value)
+        }
+      />
+            <CustomerTable
+        customers={filteredCustomers}
+        onView={(customer) => {
+          setSelectedCustomer(customer);
+          setProfileOpen(true);
+        }}
+        onEdit={(customer) => {
+          setEditCustomer(customer);
+          setOpen(true);
+        }}
+        onDelete={handleDelete}
+      />
+
+      <CustomerModal
+        open={open}
+        editCustomer={editCustomer}
+        onClose={() => {
+          setOpen(false);
+          setEditCustomer(null);
+        }}
+        onSaved={() => {
+          setOpen(false);
+          setEditCustomer(null);
+          loadCustomers();
+        }}
+      />
+
+      
+          </div>
   );
 }

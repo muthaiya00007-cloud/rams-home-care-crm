@@ -6,7 +6,7 @@ export default function Header() {
           Dashboard
         </h2>
         <p className="text-gray-500">
-          Welcome to Ram's Home Care CRM
+          Welcome to Raam's Home Nursing ServicesA CRM
         </p>
       </div>
 
@@ -23,7 +23,7 @@ export default function Header() {
           <div>
             <p className="font-semibold">Admin</p>
             <p className="text-xs text-gray-500">
-              Ram's Home Care
+              Raam's Home Nursing ServicesA
             </p>
           </div>
         </div>

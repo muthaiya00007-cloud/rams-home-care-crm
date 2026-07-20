@@ -33,14 +33,14 @@ export default function About() {
         <div>
           <img
             src="/images/Elder.jpg"
-            alt="Ram's Home Care"
+            alt="Raam's Home Nursing ServicesA"
             className="w-full rounded-3xl shadow-2xl object-cover"
           />
         </div>
 
         <div>
           <span className="inline-block rounded-full bg-blue-100 px-4 py-2 text-sm font-semibold text-blue-700">
-            ABOUT RAM'S HOME CARE
+            ABOUT Raam's Home Nursing ServicesA
           </span>
 
           <h2 className="mt-6 text-5xl font-extrabold leading-tight">
@@ -54,7 +54,7 @@ export default function About() {
 </h2>
 
           <p className="mt-6 text-lg leading-8 text-slate-600">
-            Ram's Home Care provides compassionate home nursing, patient care,
+            Raam's Home Nursing ServicesA provides compassionate home nursing, patient care,
             elder care, baby care and ICU support across Tamil Nadu. Our
             qualified nurses and caregivers are committed to delivering safe,
             reliable and personalized healthcare in the comfort of your home.

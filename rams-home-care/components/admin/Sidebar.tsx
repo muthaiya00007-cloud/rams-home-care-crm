@@ -48,7 +48,7 @@ export default function Sidebar() {
     <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-900 text-white shadow-xl">
       <div className="p-6 border-b border-slate-700">
         <h1 className="text-2xl font-bold">
-          Ram's Home Care
+          Raam'sHome Care
         </h1>
 
         <p className="text-slate-400 text-sm mt-2">

@@ -9,7 +9,7 @@ export default function Footer() {
 
           <div>
             <h2 className="text-3xl font-extrabold">
-              Ram's Home Care
+              Raam's Home Nursing ServicesA
             </h2>
 
             <p className="mt-5 leading-8 text-slate-300">
@@ -80,7 +80,7 @@ export default function Footer() {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
 
             <p className="text-slate-400">
-              © {new Date().getFullYear()} Ram's Home Care. All Rights Reserved.
+              © {new Date().getFullYear()} Raam's Home Nursing ServicesA. All Rights Reserved.
             </p>
 
             <p className="flex items-center gap-2 text-slate-400">
