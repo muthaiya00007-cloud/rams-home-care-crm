@@ -1,80 +1,125 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  LayoutDashboard,
+  Users,
+  UserCog,
+  IndianRupee,
+  Wallet,
+  Bell,
+  FileBarChart,
+  Settings,
+  LogOut,
+} from "lucide-react";
+
+const menus = [
+  {
+    name: "Dashboard",
+    href: "/admin/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    name: "Customers",
+    href: "/admin/customers",
+    icon: Users,
+  },
+  {
+    name: "Staff",
+    href: "/admin/staff",
+    icon: UserCog,
+  },
+  {
+    name: "Income",
+    href: "/admin/income",
+    icon: IndianRupee,
+  },
+  {
+    name: "Expenses",
+    href: "/admin/expenses",
+    icon: Wallet,
+  },
+  {
+    name: "Renewals",
+    href: "/admin/renewals",
+    icon: Bell,
+  },
+  {
+    name: "Reports",
+    href: "/admin/reports",
+    icon: FileBarChart,
+  },
+  {
+    name: "Settings",
+    href: "/admin/settings",
+    icon: Settings,
+  },
+];
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
 
-  const menus = [
-    {
-      name: "Dashboard",
-      href: "/admin/dashboard",
-      icon: "🏠",
-    },
-    {
-      name: "Customers",
-      href: "/admin/customers",
-      icon: "👥",
-    },
-    {
-      name: "Staff",
-      href: "/admin/staff",
-      icon: "👩‍⚕️",
-    },
-    {
-      name: "Income",
-      href: "/admin/income",
-      icon: "💰",
-    },
-    {
-      name: "Expenses",
-      href: "/admin/expenses",
-      icon: "💸",
-    },
-    {
-      name: "Renewals",
-      href: "/admin/renewals",
-      icon: "📅",
-    },
-    {
-      name: "Settings",
-      href: "/admin/settings",
-      icon: "⚙️",
-    },
-  ];
+  function logout() {
+    localStorage.removeItem("adminLoggedIn");
+    router.push("/admin/login");
+  }
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-slate-900 text-white shadow-xl">
-      <div className="p-6 border-b border-slate-700">
-        <h1 className="text-2xl font-bold">
-          Raam'sHome Care
-        </h1>
+    <aside className="flex h-screen w-72 flex-col bg-blue-950 text-white">
 
-        <p className="text-slate-400 text-sm mt-2">
-          CRM Admin Panel
+      <div className="border-b border-blue-800 p-6">
+
+        <h2 className="text-2xl font-bold">
+          Elite Home Care & Nursing
+        </h2>
+
+        <p className="mt-1 text-sm text-blue-200">
+          Admin Panel
         </p>
+
       </div>
 
-      <nav className="p-4 space-y-2">
+      <nav className="flex-1 space-y-2 p-4">
 
-        {menus.map((menu) => (
-          <Link
-            key={menu.href}
-            href={menu.href}
-            className={`flex items-center gap-3 rounded-xl px-4 py-3 transition-all ${
-              pathname === menu.href
-                ? "bg-blue-600 text-white"
-                : "hover:bg-slate-800 text-slate-300"
-            }`}
-          >
-            <span>{menu.icon}</span>
+        {menus.map((menu) => {
+          const Icon = menu.icon;
 
-            <span>{menu.name}</span>
-          </Link>
-        ))}
+          const active = pathname === menu.href;
+
+          return (
+            <Link
+              key={menu.href}
+              href={menu.href}
+              className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
+                active
+                  ? "bg-blue-700"
+                  : "hover:bg-blue-900"
+              }`}
+            >
+              <Icon size={20} />
+
+              {menu.name}
+            </Link>
+          );
+        })}
 
       </nav>
+
+      <div className="border-t border-blue-800 p-4">
+
+        <button
+          onClick={logout}
+          className="flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 py-3 font-semibold transition hover:bg-red-700"
+        >
+          <LogOut size={20} />
+
+          Logout
+        </button>
+
+      </div>
+
     </aside>
   );
 }

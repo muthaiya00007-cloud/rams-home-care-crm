@@ -1,7 +1,16 @@
+// Full Hero.tsx replacement
 "use client";
 
 import { motion } from "framer-motion";
-import { ShieldCheck, HeartPulse, Users, Phone } from "lucide-react";
+import {
+  HeartPulse,
+  ShieldCheck,
+  Users,
+  Phone,
+  MessageCircle,
+  Star,
+  CheckCircle2,
+} from "lucide-react";
 
 const stats = [
   { value: "24×7", label: "Support" },
@@ -12,109 +21,96 @@ const stats = [
 
 export default function Hero() {
   return (
-    <section
-      id="home"
-      className="relative flex min-h-[100vh] items-center overflow-hidden bg-cover bg-center pt-20"
-      style={{ backgroundImage: "url('/images/hero.jpg')" }}
-    >
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/85 to-blue-900/70" />
+    <section className="relative overflow-hidden bg-gradient-to-br from-blue-950 via-blue-800 to-cyan-600 pt-36 pb-24 text-white">
+      <div className="absolute -left-40 top-20 h-96 w-96 rounded-full bg-cyan-400/20 blur-3xl" />
+      <div className="absolute -right-32 bottom-10 h-96 w-96 rounded-full bg-blue-300/20 blur-3xl" />
 
-<div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col justify-center px-6 pt-32 pb-20 min-h-screen">
-        <motion.div
-          initial={{ opacity: 0, y: 35 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: .8 }}
-          className="max-w-4xl"
-        >
-          <span className="inline-flex items-center gap-2 rounded-full border border-cyan-400/40 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">
-            <ShieldCheck size={18} />
-            Trusted Home Healthcare
+      <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-6 lg:grid-cols-2">
+        <motion.div initial={{ opacity: 0, x: -60 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.8 }}>
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-5 py-2 text-sm font-semibold backdrop-blur">
+            <Star className="h-4 w-4 text-yellow-400" />
+            Trusted Healthcare Partner
           </span>
 
-          <h1 className="mt-6 text-6xl md:text-7xl lg:text-8xl font-black leading-tight text-white">
-  Raam's Home Nursing Services
-</h1>
-<h2 className="mt-4 text-2xl md:text-4xl font-semibold text-cyan-300">
-  Premium Home Nursing Services
-</h2>
-          <p className="mt-6 max-w-2xl text-xl leading-9 text-slate-200">
-  Compassionate Home Nursing, Patient Care, Elder Care, Baby Care and ICU
-  Support delivered by experienced professionals. We provide safe,
-  reliable and personalized healthcare at your doorstep, 24×7.
-</p>
-<div className="mt-8 flex flex-wrap gap-3">
-  <span className="rounded-full bg-white/10 px-4 py-2 text-sm text-white backdrop-blur-md">
-    ⭐ 4.9 Google Rating
-  </span>
+          <h1 className="mt-8 text-5xl font-extrabold leading-tight lg:text-6xl">
+            Elite Home
+            <br />
+            Care & Nursing
+          </h1>
 
-  <span className="rounded-full bg-white/10 px-4 py-2 text-sm text-white backdrop-blur-md">
-    🩺 Qualified Nurses
-  </span>
+          <p className="mt-6 max-w-xl text-lg leading-8 text-blue-100">
+            Professional Home Nursing, Patient Care, Elder Care, Baby Care, ICU Care,
+            Bedridden Patient Care and Home Healthcare Services across Tamil Nadu.
+          </p>
 
-  <span className="rounded-full bg-white/10 px-4 py-2 text-sm text-white backdrop-blur-md">
-    🚑 24×7 Emergency Support
-  </span>
-</div>
+          <div className="mt-5 space-y-2 text-blue-100">
+            <p>📍 Madurai • Trichy • Salem • Thanjavur • All Over Tamil Nadu</p>
+            <p>📞 99944 75537 | 99944 75243</p>
+          </div>
 
-          <div className="mt-10 flex flex-wrap gap-4">
-            <a
-              href="#contact"
-              className="rounded-2xl bg-blue-600 px-8 py-4 font-semibold text-white transition hover:bg-blue-700"
-            >
-              Book Service
-            </a>
-
-            <a
-              href="tel:9994475537"
-              className="flex items-center gap-2 rounded-2xl border border-white/30 bg-white/10 px-8 py-4 font-semibold text-white backdrop-blur-lg transition hover:bg-white/20"
-            >
-              <Phone size={18} />
+          <div className="mt-8 flex flex-wrap gap-4">
+            <a href="tel:+919994475537" className="flex items-center gap-2 rounded-xl bg-green-600 px-7 py-4 font-bold transition hover:bg-green-700">
+              <Phone className="h-5 w-5" />
               Call Now
             </a>
+
+            <a href="https://wa.me/919994475537" target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-xl border border-white px-7 py-4 font-bold transition hover:bg-white hover:text-blue-800">
+              <MessageCircle className="h-5 w-5" />
+              WhatsApp
+            </a>
+          </div>
+
+          <div className="mt-10 flex flex-wrap gap-5">
+            <div className="flex items-center gap-2"><CheckCircle2 className="text-green-400"/>Verified Staff</div>
+            <div className="flex items-center gap-2"><CheckCircle2 className="text-green-400"/>24×7 Support</div>
+            <div className="flex items-center gap-2"><CheckCircle2 className="text-green-400"/>Emergency Service</div>
+          </div>
+
+          <div className="mt-12 grid grid-cols-2 gap-5 md:grid-cols-4">
+            {stats.map((item)=>(
+              <div key={item.label} className="rounded-2xl bg-white/10 p-5 text-center backdrop-blur">
+                <h2 className="text-3xl font-bold">{item.value}</h2>
+                <p className="mt-2 text-sm text-blue-100">{item.label}</p>
+              </div>
+            ))}
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, x: 50 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: .3 }}
-         className="mt-16 grid grid-cols-2 gap-6 max-w-3xl"
-        >
-          {stats.map((item) => (
-            <div
-              key={item.label}
-              className="rounded-3xl border border-white/10 bg-white/10 p-6 text-center backdrop-blur-xl"
-            >
-              <h3 className="text-4xl font-bold text-white">
-                {item.value}
-              </h3>
-
-              <p className="mt-2 text-slate-300">
-                {item.label}
-              </p>
+        <motion.div initial={{opacity:0,x:60}} animate={{opacity:1,x:0}} transition={{duration:0.9}} className="flex justify-center">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-10 text-gray-800 shadow-[0_20px_60px_rgba(0,0,0,0.25)]">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold text-blue-900">Why Choose Elite?</h2>
+              <p className="mt-2 text-gray-600">Trusted healthcare professionals delivering compassionate care at your home.</p>
             </div>
-          ))}
 
-          <div className="col-span-2 rounded-3xl border border-cyan-400/20 bg-cyan-500/10 p-6 backdrop-blur-xl">
-            <div className="flex items-center gap-4">
-              <HeartPulse className="text-cyan-300" size={40} />
-              <div>
-                <h4 className="text-xl font-bold text-white">
-                  Compassionate Care
-                </h4>
+            <div className="space-y-6">
+              <div className="flex items-start gap-4 rounded-2xl bg-red-50 p-4">
+                <HeartPulse className="mt-1 h-10 w-10 text-red-500"/>
+                <div><h3 className="text-lg font-bold">Patient Care</h3><p className="mt-1 text-sm text-gray-600">Professional caretakers for elderly, bedridden and post-operative patients with 24×7 support.</p></div>
+              </div>
 
-                <p className="mt-1 text-slate-300">
-                  Professional nurses & caregivers for every family.
-                </p>
+              <div className="flex items-start gap-4 rounded-2xl bg-green-50 p-4">
+                <ShieldCheck className="mt-1 h-10 w-10 text-green-600"/>
+                <div><h3 className="text-lg font-bold">Verified Staff</h3><p className="mt-1 text-sm text-gray-600">Experienced, background-verified nursing professionals dedicated to quality home healthcare.</p></div>
+              </div>
+
+              <div className="flex items-start gap-4 rounded-2xl bg-blue-50 p-4">
+                <Users className="mt-1 h-10 w-10 text-blue-600"/>
+                <div><h3 className="text-lg font-bold">Family-Centered Care</h3><p className="mt-1 text-sm text-gray-600">Personalized care plans designed to meet every patient's medical and emotional needs.</p></div>
+              </div>
+            </div>
+
+            <div className="mt-8 rounded-2xl bg-gradient-to-r from-blue-900 to-cyan-600 p-6 text-white">
+              <h3 className="text-xl font-bold">24×7 Emergency Assistance</h3>
+              <p className="mt-2 text-blue-100">Immediate response for patient care, elderly support, home nursing and emergency healthcare services across Tamil Nadu.</p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <a href="tel:+919994475537" className="rounded-xl bg-white px-5 py-3 font-semibold text-blue-900 transition hover:bg-blue-100">Call Now</a>
+                <a href="https://wa.me/919994475537" target="_blank" rel="noopener noreferrer" className="rounded-xl border border-white px-5 py-3 font-semibold transition hover:bg-white hover:text-blue-900">WhatsApp</a>
               </div>
             </div>
           </div>
         </motion.div>
-
-      </div>
-
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce text-white">
-        ↓
       </div>
     </section>
   );

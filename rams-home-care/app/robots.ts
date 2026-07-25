@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
     },
-    sitemap:
-      "https://rams-home-care.vercel.app/sitemap.xml",
+    sitemap: "https://elitehomecare.in/sitemap.xml",
+    host: "https://elitehomecare.in",
   };
 }

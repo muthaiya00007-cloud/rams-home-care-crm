@@ -105,27 +105,20 @@ export default function IncomeModal({
       notes,
     };
 
-    let result;
+    try {
+  if (income?.id) {
+    await updateIncome(income.id, payload);
+  } else {
+    await addIncome(payload);
+  }
 
-    if (income?.id) {
+  onClose();
+} catch (error) {
+  const message =
+    error instanceof Error ? error.message : "Something went wrong.";
 
-      result = await updateIncome(
-        income.id,
-        payload
-      );
-
-    } else {
-
-      result = await addIncome(
-        payload
-      );
-
-    }
-
-    if (result.error) {
-      alert(result.error.message);
-      return;
-    }
+  alert(message);
+}
 
     onClose();
   }

@@ -1,47 +1,68 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { Phone, MessageCircle } from "lucide-react";
+
+const navLinks = [
+  { name: "Home", href: "/" },
+  { name: "Services", href: "#services" },
+  { name: "About", href: "#about" },
+  { name: "Gallery", href: "#gallery" },
+  { name: "Contact", href: "#contact" },
+];
 
 export default function Navbar() {
   return (
-    <nav className="fixed top-0 left-0 w-full bg-blue-900/80 backdrop-blur-md text-white z-50 shadow-lg">
-      <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-4">
-
-        <div className="flex items-center gap-3">
+    <header className="fixed top-0 left-0 z-50 w-full border-b border-white/10 bg-blue-900/90 backdrop-blur-md shadow-lg">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
+        <Link href="/" className="flex items-center gap-3">
           <Image
             src="/logo/logo.png"
-            alt="Raam's Home Nursing Services"
-            width={55}
-            height={55}
-            className="rounded-full"
+            alt="Elite Home Care & Nursing"
+            width={56}
+            height={56}
+            priority
+            className="rounded-full border-2 border-white object-cover"
           />
-
-          <div>
-            <h1 className="text-2xl font-bold">
-              Raam's Home Nursing Services
-            </h1>
-
-            <p className="text-sm text-gray-200">
-              Trusted Home Nursing Services
-            </p>
+          <div className="hidden sm:block">
+            <h1 className="text-xl font-bold text-white">Elite Home Care</h1>
+            <p className="text-sm text-blue-100">& Nursing</p>
           </div>
+        </Link>
+
+        <nav className="hidden items-center gap-8 md:flex">
+          {navLinks.map((item) => (
+            <Link
+              key={item.name}
+              href={item.href}
+              className="font-medium text-white transition hover:text-yellow-300"
+            >
+              {item.name}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="flex items-center gap-3">
+          <a
+            href="https://wa.me/919994475537"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden items-center gap-2 rounded-xl bg-green-600 px-4 py-2 font-semibold text-white transition hover:bg-green-700 lg:flex"
+          >
+            <MessageCircle size={18} />
+            WhatsApp
+          </a>
+
+          <a
+            href="tel:+919994475537"
+            className="flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700"
+          >
+            <Phone size={18} />
+            Call Now
+          </a>
         </div>
-
-        <div className="hidden md:flex gap-8 font-medium">
-          <Link href="/">Home</Link>
-          <Link href="#services">Services</Link>
-          <Link href="#about">About</Link>
-          <Link href="#gallery">Gallery</Link>
-          <Link href="#contact">Contact</Link>
-        </div>
-
-        <a
-          href="tel:9994475537"
-          className="bg-green-600 hover:bg-green-700 px-5 py-2 rounded-xl font-bold"
-        >
-          📞 Call
-        </a>
-
       </div>
-    </nav>
+    </header>
   );
 }

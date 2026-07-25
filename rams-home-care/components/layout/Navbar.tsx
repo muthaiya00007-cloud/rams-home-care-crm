@@ -37,7 +37,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/logo/logo.png"
-              alt="Raam's Home Nursing ServicesA"
+              alt="Elite Home Care & NursingA"
               width={54}
               height={54}
               className="rounded-full"
@@ -49,7 +49,7 @@ export default function Navbar() {
                   scrolled ? "text-slate-900" : "text-white"
                 }`}
               >
-                Raam's Home Nursing ServicesA
+                Elite Home Care & NursingA
               </h1>
 
               <p

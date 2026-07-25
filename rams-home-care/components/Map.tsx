@@ -1,18 +1,29 @@
+"use client";
+
 export default function Map() {
   return (
     <section
       id="location"
-      className="py-24 bg-gradient-to-b from-slate-50 via-white to-blue-50"
+      className="bg-gradient-to-b from-slate-50 via-white to-blue-50 py-24"
     >
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center mb-14">
+      <div className="mx-auto max-w-7xl px-6">
+        <div className="mb-14 text-center">
           <h2 className="text-5xl font-extrabold text-slate-900">
             Visit Our Office
           </h2>
 
           <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-600">
-            We proudly provide trusted home nursing and patient care services
-            across Trichy, Dindigul and throughout Tamil Nadu.
+            We proudly provide trusted Home Nursing, Patient Care, Elder Care
+            and Baby Care services in Madurai, Trichy, Salem, Thanjavur and
+            across Tamil Nadu.
+          </p>
+
+          <p className="mt-4 font-semibold text-blue-700">
+            Service Areas: Madurai • Trichy • Salem • Thanjavur • All Over Tamil Nadu
+          </p>
+
+          <p className="mt-2 text-slate-700">
+            Call: +91 99944 75537 | +91 99944 75243
           </p>
         </div>
 

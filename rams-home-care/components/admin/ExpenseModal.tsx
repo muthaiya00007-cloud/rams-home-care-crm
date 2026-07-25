@@ -64,10 +64,35 @@ export default function ExpenseModal({
       result = await addExpense(payload);
     }
 
-    if (result.error) {
-      alert(result.error.message);
-      return;
+    async function handleSave() {
+  if (!expenseName || !amount || !expenseDate) {
+    alert("Please fill all required fields.");
+    return;
+  }
+
+  const payload: Expense = {
+    expense_name: expenseName,
+    amount: Number(amount),
+    expense_date: expenseDate,
+    payment_method: paymentMethod,
+    notes,
+  };
+
+  try {
+    if (expense?.id) {
+      await updateExpense(expense.id, payload);
+    } else {
+      await addExpense(payload);
     }
+
+    onClose();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Something went wrong.";
+
+    alert(message);
+  }
+}
 
     onClose();
   }

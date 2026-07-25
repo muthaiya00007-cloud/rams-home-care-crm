@@ -1,54 +1,86 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Lock, User } from "lucide-react";
 
-export default function AdminLogin() {
-  const [email, setEmail] = useState("");
+export default function AdminLoginPage() {
+  const router = useRouter();
+
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  function handleLogin(e: React.FormEvent) {
     e.preventDefault();
 
-    alert("Supabase login will be connected in next step.");
-  };
+    if (
+      username === "admin" &&
+      password === "admin123"
+    ) {
+      localStorage.setItem("adminLoggedIn", "true");
+      router.push("/admin/dashboard");
+    } else {
+      alert("Invalid Username or Password");
+    }
+  }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-2xl shadow-xl">
-        <h1 className="text-3xl font-bold text-center mb-2">
-          Raam's Home Nursing ServicesA
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-900 via-blue-700 to-cyan-600 p-6">
+
+      <div className="w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+
+        <h1 className="mb-2 text-center text-3xl font-bold text-blue-900">
+          Elite Home Care & Nursing
         </h1>
 
-        <p className="text-center text-gray-500 mb-8">
+        <p className="mb-8 text-center text-gray-500">
           Admin Login
         </p>
 
-        <form onSubmit={handleLogin} className="space-y-5">
+        <form
+          onSubmit={handleLogin}
+          className="space-y-5"
+        >
 
-          <input
-            type="email"
-            placeholder="Email Address"
-            className="w-full border rounded-xl p-3"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <div className="relative">
+            <User className="absolute left-4 top-4 h-5 w-5 text-gray-500" />
 
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full border rounded-xl p-3"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+            <input
+              type="text"
+              placeholder="Username"
+              className="w-full rounded-xl border pl-12 pr-4 py-3"
+              value={username}
+              onChange={(e) =>
+                setUsername(e.target.value)
+              }
+            />
+          </div>
+
+          <div className="relative">
+            <Lock className="absolute left-4 top-4 h-5 w-5 text-gray-500" />
+
+            <input
+              type="password"
+              placeholder="Password"
+              className="w-full rounded-xl border pl-12 pr-4 py-3"
+              value={password}
+              onChange={(e) =>
+                setPassword(e.target.value)
+              }
+            />
+          </div>
 
           <button
-            className="w-full bg-blue-600 text-white rounded-xl p-3 font-semibold hover:bg-blue-700"
+            type="submit"
+            className="w-full rounded-xl bg-blue-700 py-3 font-bold text-white transition hover:bg-blue-800"
           >
             Login
           </button>
 
         </form>
+
       </div>
+
     </div>
   );
 }

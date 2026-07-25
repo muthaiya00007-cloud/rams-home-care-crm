@@ -1,7 +1,7 @@
 import { supabase } from "./supabase";
 
 export type Staff = {
-  id?: number;
+  id?: string;
   staff_name: string;
   phone: string;
   aadhaar: string;
@@ -10,7 +10,7 @@ export type Staff = {
   qualification: string;
   experience: string;
   salary: number;
-  joining_date: string | null;
+  joining_date: string;
   status: string;
   notes: string;
 };
@@ -19,46 +19,35 @@ export async function getStaff() {
   const { data, error } = await supabase
     .from("staff")
     .select("*")
-    .order("id", { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
 
-  return data ?? [];
+  return data;
 }
 
 export async function addStaff(staff: Staff) {
-  const { data, error } = await supabase
+  const { error } = await supabase
     .from("staff")
-    .insert([staff])
-    .select();
+    .insert([staff]);
 
   if (error) throw error;
-
-  return data ?? [];
 }
 
-export async function updateStaff(
-  id: number,
-  staff: Staff
-) {
-  const { data, error } = await supabase
+export async function updateStaff(id: string, staff: Staff) {
+  const { error } = await supabase
     .from("staff")
     .update(staff)
-    .eq("id", id)
-    .select();
+    .eq("id", id);
 
   if (error) throw error;
-
-  return data ?? [];
 }
 
-export async function deleteStaff(id: number) {
+export async function deleteStaff(id: string) {
   const { error } = await supabase
     .from("staff")
     .delete()
     .eq("id", id);
 
   if (error) throw error;
-
-  return true;
 }
