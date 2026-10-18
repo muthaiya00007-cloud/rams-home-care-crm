@@ -90,7 +90,7 @@ try{const value=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(val
 function today(){let d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,"0"),String(d.getDate()).padStart(2,"0")].join("-");}
 function now(){return new Date().toISOString();}
 function date(value){if(!value)return "Not set";const d=new Date(value+"T12:00:00");return isNaN(d)?String(value):d.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});}
-function tel(v){return String(v||"").replace(/\\D/g,"").slice(-10);}
+function tel(v){return String(v||"").replace(/\D/g,"").slice(-10);}
 function alertToast(s,bad){const el=$("toast");el.textContent=s;el.className=bad?"error":"";el.style.display="block";window.scrollTo(0,0);setTimeout(()=>{el.style.display="none";},4500);}
 function error(s){alertToast(s,true);}
 function text(parent,value){parent.textContent=String(value==null?"":value);return parent;}
