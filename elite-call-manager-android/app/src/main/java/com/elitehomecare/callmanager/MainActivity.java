@@ -8,6 +8,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.ValueCallback;
 import android.content.Intent;
 import android.net.Uri;
 import android.graphics.Color;
@@ -15,6 +16,8 @@ import android.view.WindowManager;
 
 public class MainActivity extends Activity {
     private WebView webView;
+    private ValueCallback<Uri[]> fileCallback;
+    private static final int PICK_BACKUP = 8642;
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
@@ -31,7 +34,17 @@ public class MainActivity extends Activity {
         settings.setAllowFileAccessFromFileURLs(false);
         settings.setAllowUniversalAccessFromFileURLs(false);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        webView.setWebChromeClient(new WebChromeClient());
+        webView.setWebChromeClient(new WebChromeClient() {
+            @Override public boolean onShowFileChooser(WebView v, ValueCallback<Uri[]> callback, FileChooserParams parameters) {
+                if (fileCallback != null) fileCallback.onReceiveValue(null);
+                fileCallback = callback;
+                Intent choose = new Intent(Intent.ACTION_GET_CONTENT);
+                choose.addCategory(Intent.CATEGORY_OPENABLE);
+                choose.setType("application/json");
+                try { startActivityForResult(choose, PICK_BACKUP); return true; }
+                catch (Exception ignored) { fileCallback = null; callback.onReceiveValue(null); return false; }
+            }
+        });
         webView.addJavascriptInterface(new AndroidBridge(), "EliteNative");
         webView.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest request) {
@@ -80,6 +93,15 @@ public class MainActivity extends Activity {
                     startActivity(Intent.createChooser(i, "Export / share CSV backup"));
                 } catch (Exception ignored) { }
             });
+        }
+    }
+
+    @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_BACKUP && fileCallback != null) {
+            Uri[] results = WebChromeClient.FileChooserParams.parseResult(resultCode, data);
+            fileCallback.onReceiveValue(results);
+            fileCallback = null;
         }
     }
 
