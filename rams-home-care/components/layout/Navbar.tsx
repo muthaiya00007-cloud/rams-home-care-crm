@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, Phone, X } from "lucide-react";
+import { LockKeyhole, Menu, Phone, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const links = [
@@ -79,6 +79,17 @@ export default function Navbar() {
           </nav>
 
           <div className="hidden lg:flex items-center gap-3">
+            <Link
+              href="/admin/login"
+              className={`flex items-center gap-2 rounded-xl border px-5 py-3 font-semibold transition ${
+                scrolled
+                  ? "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"
+                  : "border-white/40 bg-white/10 text-white hover:bg-white/20"
+              }`}
+            >
+              <LockKeyhole size={18} />
+              Login
+            </Link>
             <a
               href="tel:9994475537"
               className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700 transition"
@@ -118,6 +129,15 @@ export default function Navbar() {
                   {item.name}
                 </Link>
               ))}
+
+              <Link
+                href="/admin/login"
+                onClick={() => setMobileOpen(false)}
+                className="mt-2 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-3 font-semibold text-blue-700"
+              >
+                <LockKeyhole size={18} />
+                Login
+              </Link>
 
               <a
                 href="tel:9994475537"
