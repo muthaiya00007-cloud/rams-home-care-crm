@@ -1,0 +1,46 @@
+name: Verify Elite SEO preview
+on:
+  push:
+    branches: [seo/public-page-metadata]
+    paths: [.github/workflows/elite-seo-preview.yml]
+permissions: {}
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Build preview from the active production source
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          node --input-type=module <<'NODE'
+          const team = 'team_orNcv72hBmZmJQg5z46QJgz0';
+          const project = 'prj_46DWPeHumybIj2KbDX3YJqGlFsG1';
+          const host = 'www.elitehomecarenursing.com';
+          async function api(path,body) {
+            const response = await fetch('https://api.vercel.com'+path+'?teamId='+team,{redirect:'error',method:body?'POST':'GET',headers:{Authorization:'Bearer '+process.env.VERCEL_TOKEN,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+            if (!response.ok) throw Error('Vercel '+response.status+' on '+path.split('/')[2]);
+            return response.json();
+          }
+          if (!process.env.VERCEL_TOKEN) throw Error('VERCEL_TOKEN is missing');
+          const alias=await api('/v4/aliases/'+host);
+          if(alias.projectId!==project||!alias.deploymentId) throw Error('Unexpected production project');
+          const dep=await api('/v13/deployments/'+alias.deploymentId);
+          const settings=dep.projectSettings;
+          if(settings?.outputDirectory!=='release-out'||!settings.buildCommand?.includes('cp seo-polish/*.html release-out/')) throw Error('Unexpected production build');
+          const tree=await api('/v6/deployments/'+dep.id+'/files');
+          if(tree.length!==1||tree[0].name!=='src') throw Error('Unexpected source tree');
+          const files=[];
+          function walk(nodes,prefix='') {
+           for(const n of nodes) {
+            if(n.type==='directory') walk(n.children,prefix+n.name+'/');
+            else {if(!/^[0-9a-f]{40}$/.test(n.uid))throw Error('Invalid source reference'); files.push({file:prefix+n.name,sha:n.uid});}
+           }
+          }
+          walk(tree[0].children);
+          if(!files.some(x=>x.file==='crm-source.tar.gz')||files.some(x=>x.file==='apply-page-seo.cjs')) throw Error('Unexpected release inputs');
+          files.push({file:'apply-page-seo.cjs',encoding:'base64',data:'Ly8gUnVuIGFmdGVyIHRoZSBwcm9kdWN0aW9uIHN0YXRpYyBleHBvcnQ6IG5vZGUgYXBwbHktcGFnZS1zZW8uY2pzIHJlbGVhc2Utb3V0CmNvbnN0IGZzID0gcmVxdWlyZSgnbm9kZTpmcycpOwpjb25zdCBwYXRoID0gcmVxdWlyZSgnbm9kZTpwYXRoJyk7CmNvbnN0IHJvb3QgPSBwcm9jZXNzLmFyZ3ZbMl07CmlmICghcm9vdCkgdGhyb3cgbmV3IEVycm9yKCdTdXBwbHkgdGhlIHN0YXRpYyBleHBvcnQgZGlyZWN0b3J5LicpOwpjb25zdCBvcmlnaW4gPSAnaHR0cHM6Ly93d3cuZWxpdGVob21lY2FyZW51cnNpbmcuY29tJzsKY29uc3QgcGFnZXMgPSBuZXcgTWFwKCk7CnBhZ2VzLnNldCgnLycsIFsnRWxpdGUgSG9tZSBDYXJlICYgTnVyc2luZyBTZXJ2aWNlcyB8IFRyaWNoeSAmIE1hZHVyYWknLCAnQ29udGFjdCBvdXIgVHJpY2h5IG9mZmljZSBhYm91dCBob21lIG51cnNpbmcsIGVsZGVybHkgY2FyZSBhbmQgcGF0aWVudCBhdHRlbmRhbnRzLiBBc2sgYWJvdXQgaG9tZSBjYXJlIGF2YWlsYWJpbGl0eSBpbiBUcmljaHksIE1hZHVyYWkgYW5kIHlvdXIgbG9jYWxpdHkuJ10pOwpjb25zdCBjaXR5RGVzY3JpcHRpb25zID0gewogIFRyaWNoeTogJ0NvbnRhY3Qgb3VyIFRyaWNoeSBvZmZpY2UgZm9yIGEgcGF0aWVudCBhdHRlbmRhbnQsIGVsZGVybHkgY2FyZSBvciBob21lIG51cnNpbmcuIERpc2N1c3MgdGhlIGNhcmUgbmVlZGVkIGF0IGhvbWUsIGR1dHkgaG91cnMgYW5kIGF2YWlsYWJpbGl0eS4nLAogIE1hZHVyYWk6ICdBcnJhbmdlIGhvbWUgY2FyZSBpbiBNYWR1cmFpIHRocm91Z2ggb3VyIFRyaWNoeSBvZmZpY2UuIEFzayBhYm91dCBwYXRpZW50IGF0dGVuZGFudHMsIGhvbWUgbnVyc2luZywgZWxkZXIgY2FyZSBhbmQgc3VwcG9ydCBmb3IgeW91ciBmYW1pbHkuJywKICBTYWxlbTogJ0V4cGxvcmUgZWxkZXJseSBjYXJlLCBwYXRpZW50IGF0dGVuZGFudHMgYW5kIG51cnNpbmcgc3VwcG9ydCBhdCBob21lIGluIFNhbGVtLiBDb250YWN0IEVsaXRlIHRvIGRpc2N1c3MgeW91ciBsb2NhbGl0eSBhbmQgdGhlIGhlbHAgeW91ciBmYW1pbHkgbmVlZHMuJywKICBUaGFuamF2dXI6ICdFeHBsb3JlIGhvbWUgY2FyZSBhZnRlciBkaXNjaGFyZ2UsIGVsZGVybHkgY2FyZSBhbmQgYmFieSBjYXJlIGluIFRoYW5qYXZ1ci4gQXNrIEVsaXRlIGFib3V0IHN1aXRhYmxlIHN1cHBvcnQgYW5kIGF2YWlsYWJsZSBkdXR5IGhvdXJzLicsCiAgUHVkdWtrb3R0YWk6ICdGaW5kIG91dCBhYm91dCBob21lIGNhcmUgZm9yIGVsZGVybHkgcmVsYXRpdmVzLCBwYXRpZW50cyBhbmQgYmFiaWVzIGluIFB1ZHVra290dGFpLiBEaXNjdXNzIHlvdXIgaG91c2Vob2xk4oCZcyBjYXJlIG5lZWRzIGFuZCBsb2NhbCBhdmFpbGFiaWxpdHkgd2l0aCBFbGl0ZS4nCn07CmNvbnN0IHNlcnZpY2VzID0gewogICdob21lLWNhcmUnOiBbJ0hvbWUgQ2FyZSBTZXJ2aWNlcycsICdEaXNjdXNzIGRheS10by1kYXkgc3VwcG9ydCBhdCBob21lIGZvciB5b3VyIGZhbWlseSddLAogICdob21lLW51cnNpbmcnOiBbJ0hvbWUgTnVyc2luZycsICdBc2sgYWJvdXQgbnVyc2luZyBzdXBwb3J0IGF0IGhvbWUgYWZ0ZXIgYSBob3NwaXRhbCBzdGF5J10sCiAgJ3BhdGllbnQtY2FyZSc6IFsnUGF0aWVudCBDYXJlIGF0IEhvbWUnLCAnQXNrIGFib3V0IGEgcGF0aWVudCBhdHRlbmRhbnQgZm9yIGRhaWx5IHJvdXRpbmVzIGFuZCBiZWRzaWRlIGFzc2lzdGFuY2UnXSwKICAnZWxkZXItY2FyZSc6IFsnRWxkZXIgQ2FyZSBhdCBIb21lJywgJ0Rpc2N1c3MgaGVscCBmb3IgYW4gZWxkZXJseSByZWxhdGl2ZSB3aXRoIGRhaWx5IHJvdXRpbmVzIGFuZCBjb21wYW5pb25zaGlwJ10KfTsKZm9yIChjb25zdCBbY2l0eSwgZGVzY3JpcHRpb25dIG9mIE9iamVjdC5lbnRyaWVzKGNpdHlEZXNjcmlwdGlvbnMpKSB7CiAgY29uc3Qgc2x1ZyA9IGNpdHkudG9Mb3dlckNhc2UoKTsKICBwYWdlcy5zZXQoJy9ob21lLWNhcmUtJyArIHNsdWcsIFsnSG9tZSBDYXJlIGluICcgKyBjaXR5ICsgJyB8IFBhdGllbnQgQXR0ZW5kYW50cyAmIE51cnNpbmcnLCBkZXNjcmlwdGlvbl0pOwogIGlmIChjaXR5ID09PSAnVHJpY2h5JyB8fCBjaXR5ID09PSAnTWFkdXJhaScpIHsKICAgIGZvciAoY29uc3QgW3NlcnZpY2UsIFt0aXRsZSwgaW50cm9dXSBvZiBPYmplY3QuZW50cmllcyhzZXJ2aWNlcykpIHsKICAgICAgcGFnZXMuc2V0KCcvc2VydmljZXMvJyArIHNlcnZpY2UgKyAnLScgKyBzbHVnLCBbdGl0bGUgKyAnIGluICcgKyBjaXR5ICsgJyB8IEVsaXRlIEhvbWUgQ2FyZScsIGludHJvICsgJyBpbiAnICsgY2l0eSArICcuIENvbnRhY3QgRWxpdGUgdG8gY2hlY2sgbG9jYWwgYXZhaWxhYmlsaXR5IGFuZCBkdXR5IG9wdGlvbnMuJ10pOwogICAgfQogIH0KfQpjb25zdCBlc2NhcGUgPSB2YWx1ZSA9PiB2YWx1ZS5yZXBsYWNlQWxsKCcmJywgJyZhbXA7JykucmVwbGFjZUFsbCgnIicsICcmcXVvdDsnKS5yZXBsYWNlQWxsKCc8JywgJyZsdDsnKTsKY29uc3QgY2hhbmdlcyA9IFtdOwpmb3IgKGNvbnN0IFtyb3V0ZSwgW3RpdGxlLCBkZXNjcmlwdGlvbl1dIG9mIHBhZ2VzKSB7CiAgY29uc3QgYmFzZSA9IHBhdGguam9pbihyb290LCByb3V0ZS5zbGljZSgxKSk7CiAgY29uc3QgZmlsZSA9IChyb3V0ZSA9PT0gJy8nID8gW3BhdGguam9pbihyb290LCAnaW5kZXguaHRtbCcpXSA6IFtiYXNlICsgJy5odG1sJywgcGF0aC5qb2luKGJhc2UsICdpbmRleC5odG1sJyldKS5maW5kKGZzLmV4aXN0c1N5bmMpOwogIGlmICghZmlsZSkgdGhyb3cgbmV3IEVycm9yKCdNaXNzaW5nIGV4cG9ydCBmb3IgJyArIHJvdXRlKTsKICBjb25zdCBodG1sID0gZnMucmVhZEZpbGVTeW5jKGZpbGUsICd1dGY4Jyk7CiAgaWYgKCEvPGhlYWRcYltePl0qPltcc1xTXSo/PFwvaGVhZD4vaS50ZXN0KGh0bWwpKSB0aHJvdyBuZXcgRXJyb3IoJ01pc3NpbmcgaGVhZCBpbiAnICsgcm91dGUpOwogIGNvbnN0IG5leHQgPSBodG1sLnJlcGxhY2UoLyg8aGVhZFxiW14+XSo+KShbXHNcU10qPykoPFwvaGVhZD4pL2ksIChfLCBvcGVuLCBoZWFkLCBjbG9zZSkgPT4gewogICAgY29uc3Qga2VwdCA9IGhlYWQucmVwbGFjZSgvPHRpdGxlXGJbXj5dKj5bXHNcU10qPzxcL3RpdGxlPi9naSwgJycpLnJlcGxhY2UoLzwoPzptZXRhfGxpbmspXGJbXj5dKj4vZ2ksIHRhZyA9PgogICAgICAvXGJuYW1lXHMqPVxzKlsiJ11kZXNjcmlwdGlvblsiJ10vaS50ZXN0KHRhZykgfHwgL1xicmVsXHMqPVxzKlsiJ11jYW5vbmljYWxbIiddL2kudGVzdCh0YWcpID8gJycgOiB0YWcpOwogICAgcmV0dXJuIG9wZW4gKyBrZXB0ICsgJzx0aXRsZT4nICsgZXNjYXBlKHRpdGxlKSArICc8L3RpdGxlPjxtZXRhIG5hbWU9ImRlc2NyaXB0aW9uIiBjb250ZW50PSInICsgZXNjYXBlKGRlc2NyaXB0aW9uKSArICciPjxsaW5rIHJlbD0iY2Fub25pY2FsIiBocmVmPSInICsgb3JpZ2luICsgcm91dGUgKyAnIj4nICsgY2xvc2U7CiAgfSk7CiAgY2hhbmdlcy5wdXNoKFtmaWxlLCBuZXh0XSk7Cn0KZm9yIChjb25zdCBbZmlsZSwgaHRtbF0gb2YgY2hhbmdlcykgZnMud3JpdGVGaWxlU3luYyhmaWxlLCBodG1sKTsKY29uc29sZS5sb2coJ1VwZGF0ZWQgc2VhcmNoIG1ldGFkYXRhIGZvciAnICsgY2hhbmdlcy5sZW5ndGggKyAnIHBhZ2VzLicpOwo='});
+          const request={name:dep.name,project,files,projectSettings:{buildCommand:settings.buildCommand+' && node apply-page-seo.cjs release-out',installCommand:settings.installCommand,outputDirectory:settings.outputDirectory,framework:settings.framework}};
+          const preview=await api('/v13/deployments',request);
+          console.log('Preview deployment '+preview.id+' https://'+preview.url);
+          NODE
