@@ -1,4 +1,4 @@
-name: Publish verified client call number
+name: Verify live client call number
 on:
   push:
     branches: [seo/public-page-metadata]
@@ -22,33 +22,21 @@ jobs:
             if (!response.ok) throw Error('Vercel '+response.status+' on '+path.split('/')[2]);
             return response.json();
           }
-          if (!process.env.VERCEL_TOKEN) throw Error('VERCEL_TOKEN is missing');
-          const alias=await api('/v4/aliases/'+host);
-          if(alias.projectId!==project||!alias.deploymentId) throw Error('Unexpected production project');
-          const dep=await api('/v13/deployments/'+alias.deploymentId);
-          const settings=dep.projectSettings;
-          if(settings?.outputDirectory!=='release-out'||!settings.buildCommand?.includes('cp seo-polish/*.html release-out/')) throw Error('Unexpected production build');
-          const tree=await api('/v6/deployments/'+dep.id+'/files');
-          if(tree.length!==1||tree[0].name!=='src') throw Error('Unexpected source tree');
-          const files=[];
-          function walk(nodes,prefix='') {
-           for(const n of nodes) {
-            if(n.type==='directory') walk(n.children,prefix+n.name+'/');
-            else {if(!/^[0-9a-f]{40}$/.test(n.uid))throw Error('Invalid source reference'); files.push({file:prefix+n.name,sha:n.uid});}
-           }
-          }
-          walk(tree[0].children);
-          if(!files.some(x=>x.file==='crm-source.tar.gz') || !settings.buildCommand.includes('apply-care-enquiries.cjs') || files.some(x=>x.file==='apply-client-phone.cjs')) throw Error('Unexpected release inputs');
-          files.push({file:'apply-client-phone.cjs',data:"const fs = require('node:fs');\nconst path = require('node:path');\nconst root = 'release-out';\nfunction update(dir) {\n  for (const entry of fs.readdirSync(dir, {withFileTypes:true})) {\n    const file = path.join(dir,entry.name);\n    if (entry.isDirectory()) { update(file); continue; }\n    if (!entry.isFile() || !/\\.(html|js|json|txt|xml)$/i.test(entry.name)) continue;\n    const original = fs.readFileSync(file,'utf8');\n    const updated = original.replace(/99944([ -]?)75243/g, (_,sep) => '99944'+sep+'75537');\n    if (updated !== original) fs.writeFileSync(file,updated);\n  }\n}\nupdate(root);\nconst pages = ['index.html'];\nfor (const city of ['trichy','madurai']) {\n  pages.push('home-care-'+city+'.html');\n  for (const service of ['patient-care','elder-care','home-nursing','home-care']) pages.push('services/'+service+'-'+city+'.html');\n}\nfor (const page of pages) {\n  const html = fs.readFileSync(path.join(root,page),'utf8');\n  const calls = [...html.matchAll(/href=\"tel:([^\"]+)\"/g)];\n  if (!calls.length || calls.some(m=>m[1]!=='+919994475537')) throw Error('Call link validation failed: '+page);\n}\n"});
-          const request={name:dep.name,project,files,projectSettings:{buildCommand:settings.buildCommand+' && node apply-client-phone.cjs',installCommand:settings.installCommand,outputDirectory:settings.outputDirectory,framework:settings.framework}};
-          const trial=await api('/v13/deployments',request);
-          for(let i=0;i<100;i++){
-            const state=await api('/v13/deployments/'+trial.id);
-            if(state.readyState==='READY')break;
-            if(['ERROR','CANCELED'].includes(state.readyState)||i===99)throw Error('Preview '+state.readyState);
+          const id='dpl_6zomksNVHRd8iLX8mShJ6WUUXRLP';
+          for(let attempt=0;attempt<60;attempt++){
+            const dep=await api('/v13/deployments/'+id);
+            const alias=await api('/v4/aliases/'+host);
+            if(dep.readyState==='READY' && alias.deploymentId===id) break;
+            if(['ERROR','CANCELED'].includes(dep.readyState)||attempt===59) throw Error('Production state '+dep.readyState+' '+(dep.errorMessage||'')+' alias '+alias.deploymentId);
             await new Promise(r=>setTimeout(r,4000));
           }
-          if((await api('/v4/aliases/'+host)).deploymentId!==alias.deploymentId)throw Error('Production changed');
-          const preview=await api('/v13/deployments',{...request,target:'production'});
-          console.log('Production deployment '+preview.id+' https://'+preview.url);
+          const pages=['/','/home-care-trichy','/home-care-madurai','/home-care-pudukkottai','/home-care-salem','/home-care-thanjavur'];
+          for(const city of ['trichy','madurai'])for(const svc of ['home-care','home-nursing','elder-care','patient-care'])pages.push('/services/'+svc+'-'+city);
+          for(const page of pages){
+            const res=await fetch('https://'+host+page+'?check='+id,{redirect:'error'});
+            const html=await res.text();
+            const calls=[...html.matchAll(/href="tel:([^"]+)"/g)];
+            if(!res.ok||!calls.length||calls.some(m=>m[1]!=='+919994475537'))throw Error('Phone check failed '+page);
+            console.log('Verified '+page);
+          }
           NODE
