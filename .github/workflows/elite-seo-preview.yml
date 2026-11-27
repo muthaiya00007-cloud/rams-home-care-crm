@@ -1,5 +1,6 @@
 name: Verify Elite SEO preview
 on:
+  workflow_dispatch:
   push:
     branches: [seo/public-page-metadata]
     paths: [.github/workflows/elite-seo-preview.yml]
