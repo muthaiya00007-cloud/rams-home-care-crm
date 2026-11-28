@@ -1,0 +1,22 @@
+name: Verify public city landing pages
+on:
+  push:
+    branches: [verify/public-city-routes]
+permissions: {}
+jobs:
+  public-pages:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Check custom domain responses and call buttons
+        shell: bash
+        run: |
+          failed=0
+          for route in / /home-care-trichy /home-care-madurai /home-care-thanjavur /home-care-salem /home-care-pudukkottai /home-care-trichy.html /rams-home-care/public/home-care-trichy.html; do
+            status=$(curl -LsS --max-time 12 -o /tmp/city.html -w '%{http_code}' "https://www.elitehomecarenursing.com$route") || status=000
+            call=no
+            if grep -Eq 'tel:[^"]*9994475537' /tmp/city.html; then call=yes; fi
+            echo "$route HTTP=$status call=$call"
+            case "$route" in /home-care-*.html) ;; /home-care-*) if [[ $status != 200 || $call != yes ]]; then failed=1; fi ;; esac
+          done
+          exit "$failed"
