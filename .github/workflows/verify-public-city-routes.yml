@@ -1,4 +1,4 @@
-name: Check care photos and enquiry links
+name: Verify original CRM deployment
 on:
   push:
     branches: [verify/public-city-routes]
@@ -6,33 +6,15 @@ permissions: {}
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
     steps:
-      - name: Read public pages and check photo responses
+      - name: Verify original homepage and login
         shell: python
         run: |
-          from urllib.request import urlopen
-          from html.parser import HTMLParser
-          class Page(HTMLParser):
-              def __init__(self):
-                  super().__init__()
-                  self.images = set()
-                  self.links = set()
-              def handle_starttag(self, tag, attrs):
-                  attrs = dict(attrs)
-                  if tag == "img": self.images.add(attrs.get("src"))
-                  if tag in ("a", "link"): self.links.add(attrs.get("href"))
-          host = "https://www.elitehomecarenursing.com"
-          photos = {"/elite-city-assets/" + name + ".jpg" for name in ("care-patient-premium", "care-elder-premium", "care-mother-newborn-v1")}
-          css = "/elite-city-assets/care-photos.css"
-          for route in ["/"] + ["/home-care-" + city for city in ("trichy", "madurai", "thanjavur", "salem", "pudukkottai")]:
-              with urlopen(host + route, timeout=12) as res: html = res.read().decode()
-              page = Page()
-              page.feed(html)
-              assert photos <= page.images and css in page.links and "tel:+919994475537" in page.links and "பின்னணியையும் சரிபார்த்த பிறகே" in html, route
-              print(route, "OK")
-          for photo in sorted(photos):
-              with urlopen(host + photo, timeout=12) as res: data = res.read()
-              assert data.startswith(bytes.fromhex("ffd8ff")) and len(data) > 1000, photo
-              print(photo, len(data))
-          with urlopen(host + css, timeout=12) as res: assert b".care-photos" in res.read()
+          import urllib.request, urllib.error, re
+          host="https://elite-home-care-requirements-4yiwu1946.vercel.app"
+          for p in ["/","/admin/login","/admin/login.html","/services/patient-care-trichy"]:
+              try:
+                  with urllib.request.urlopen(host+p,timeout=15) as res:
+                      html=res.read().decode()
+                      print(p,res.status,"oldHome", 'id="gallery"' in html,"navLogin", 'href="/admin/login"' in html,"password", 'type="password"' in html,"chunks", '/_next/static/' in html, "finalHost",res.url.split('/')[2])
+              except urllib.error.HTTPError as e: print(p,e.code)
