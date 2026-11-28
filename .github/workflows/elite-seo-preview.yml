@@ -1,42 +1,46 @@
-name: Verify live client call number
+name: Restore the original Elite homepage and CRM with family care updates
 on:
   push:
     branches: [seo/public-page-metadata]
     paths: [.github/workflows/elite-seo-preview.yml]
-permissions: {}
+permissions:
+  contents: read
 jobs:
-  preview:
+  restore:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
-      - name: Build preview from the active production source
+      - uses: actions/checkout@v4
+        with:
+          ref: 71444bb20d9ed0ad4b313fc9cacea3820d7740a1
+          persist-credentials: false
+          sparse-checkout: rams-home-care/public
+      - name: Restore original application, preview and publish
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          node --input-type=module <<'NODE'
-          const team = 'team_orNcv72hBmZmJQg5z46QJgz0';
-          const project = 'prj_46DWPeHumybIj2KbDX3YJqGlFsG1';
-          const host = 'www.elitehomecarenursing.com';
-          async function api(path,body) {
-            const response = await fetch('https://api.vercel.com'+path+'?teamId='+team,{redirect:'error',method:body?'POST':'GET',headers:{Authorization:'Bearer '+process.env.VERCEL_TOKEN,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
-            if (!response.ok) throw Error('Vercel '+response.status+' on '+path.split('/')[2]);
-            return response.json();
-          }
-          const id='dpl_6zomksNVHRd8iLX8mShJ6WUUXRLP';
-          for(let attempt=0;attempt<60;attempt++){
-            const dep=await api('/v13/deployments/'+id);
-            const alias=await api('/v4/aliases/'+host);
-            if(dep.readyState==='READY' && alias.deploymentId===id) break;
-            if(['ERROR','CANCELED'].includes(dep.readyState)||attempt===59) throw Error('Production state '+dep.readyState+' '+(dep.errorMessage||'')+' alias '+alias.deploymentId);
-            await new Promise(r=>setTimeout(r,4000));
-          }
-          const pages=['/','/home-care-trichy','/home-care-madurai','/home-care-pudukkottai','/home-care-salem','/home-care-thanjavur'];
-          for(const city of ['trichy','madurai'])for(const svc of ['home-care','home-nursing','elder-care','patient-care'])pages.push('/services/'+svc+'-'+city);
-          for(const page of pages){
-            const res=await fetch('https://'+host+page+'?check='+id,{redirect:'error'});
-            const html=await res.text();
-            const calls=[...html.matchAll(/href="tel:([^"]+)"/g)];
-            if(!res.ok||!calls.length||calls.some(m=>m[1]!=='+919994475537'))throw Error('Phone check failed '+page);
-            console.log('Verified '+page);
-          }
+          node <<'NODE'
+          const fs=require('node:fs'), path=require('node:path');
+          const project='prj_46DWPeHumybIj2KbDX3YJqGlFsG1',team='team_orNcv72hBmZmJQg5z46QJgz0',host='www.elitehomecarenursing.com';
+          async function api(route,body){const r=await fetch('https://api.vercel.com'+route+'?teamId='+team,{method:body?'POST':'GET',headers:{Authorization:'Bearer '+process.env.VERCEL_TOKEN,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});if(!r.ok){throw Error('Vercel '+r.status+' '+route+' '+(await r.text()).slice(0,250))}return r.json()}
+          async function main(){
+          const live=await api('/v4/aliases/'+host);
+          const dep=await api('/v13/deployments/dpl_6zomksNVHRd8iLX8mShJ6WUUXRLP');
+          if(live.projectId!==project||dep.projectId!==project||dep.readyState!=='READY')throw Error('Project or source mismatch');
+          const s=dep.projectSettings;if(s.outputDirectory!=='release-out'||!s.buildCommand.includes('apply-client-phone.cjs'))throw Error('Unexpected original build');
+          const tree=await api('/v6/deployments/'+dep.id+'/files'),files=[];
+          function walk(nodes,prefix=''){for(const n of nodes){const name=prefix+n.name;if(n.type==='directory')walk(n.children,name+'/');else{if(!/^[0-9a-f]{40}$/.test(n.uid))throw Error('Source reference invalid');files.push({file:name,sha:n.uid})}}}
+          if(tree.length!==1||tree[0].name!=='src')throw Error('Unknown source tree');walk(tree[0].children);
+          if(!files.some(f=>f.file==='crm-source.tar.gz'))throw Error('CRM archive missing');
+          const add=(file,data)=>files.push({file,data:data.toString('base64'),encoding:'base64'});
+          for(const city of ['trichy','madurai','salem','thanjavur','pudukkottai']){const name='home-care-'+city+'.html';add('family-update/pages/'+name,fs.readFileSync('rams-home-care/public/'+name))}
+          for(const name of fs.readdirSync('rams-home-care/public/elite-city-assets'))add('family-update/assets/'+name,fs.readFileSync('rams-home-care/public/elite-city-assets/'+name));
+          add('family-update/apply.cjs',Buffer.from("const fs=require('node:fs'), path=require('node:path');\nconst root='release-out', original=fs.readFileSync(path.join(root,'index.html'),'utf8');\nfor(const marker of ['id=\"home\"','id=\"services\"','id=\"gallery\"','id=\"about\"','href=\"/admin/login\"'])if(!original.includes(marker))throw Error('Original homepage marker missing: '+marker);\nconst login=['admin/login.html','admin/login/index.html'].find(p=>fs.existsSync(path.join(root,p)));\nif(!login)throw Error('Original CRM login missing from build');\nconst chunks=[...original.matchAll(/(?:src|href)=\"(\\/_next\\/static\\/[^\"?]+)[^\"]*\"/g)].map(m=>m[1]);\nif(!chunks.length||chunks.some(p=>!fs.existsSync(path.join(root,p))))throw Error('Missing original application assets');\nfs.cpSync('family-update/assets',path.join(root,'elite-city-assets'),{recursive:true});\nfs.cpSync('family-update/pages',root,{recursive:true});\nconst markup=\"<section id=\\\"elite-family-care\\\" lang=\\\"ta\\\" style=\\\"max-width:74rem;margin:auto;padding:clamp(1rem,4vw,3rem)\\\"><h2 style=\\\"font-size:clamp(1.35rem,3vw,2rem);font-weight:700\\\">உங்கள் குடும்பத்திற்கான வீட்டுப் பராமரிப்பு</h2><div class=\\\"care-proof\\\" lang=\\\"ta\\\">எங்கள் அலுவலகம் ஒவ்வொரு பணியாளரின் பின்னணியையும் சரிபார்த்த பிறகே உங்கள் வீட்டுக்கு அனுப்புகிறது.</div><div class=\\\"care-photos\\\" lang=\\\"ta\\\"><figure><img src=\\\"/elite-city-assets/care-patient-premium.jpg\\\" alt=\\\"\\\" decoding=\\\"async\\\"><figcaption>நோயாளி பராமரிப்பு</figcaption></figure><figure><img src=\\\"/elite-city-assets/care-elder-premium.jpg\\\" alt=\\\"\\\" decoding=\\\"async\\\" loading=\\\"lazy\\\"><figcaption>முதியோர் பராமரிப்பு</figcaption></figure><figure><img src=\\\"/elite-city-assets/care-mother-newborn-v1.jpg\\\" alt=\\\"\\\" decoding=\\\"async\\\" loading=\\\"lazy\\\"><figcaption>தாய் மற்றும் குழந்தை பராமரிப்பு</figcaption></figure></div></section>\";\nconst originalSection='<section id=\"services\"';\nconst enhanced=original.replace('</head>','<link rel=\"stylesheet\" href=\"/elite-city-assets/care-photos.css\"></head>').replace(originalSection,()=>markup+originalSection);\nfs.writeFileSync(path.join(root,'index.html'),enhanced);\nfs.writeFileSync(path.join(root,'elite-city-assets/family-section.js'),\"function showFamilyCare(){const target=document.querySelector('section#services');if(target&&!document.getElementById('elite-family-care'))target.insertAdjacentHTML('beforebegin',\"+JSON.stringify(markup)+\");}window.addEventListener('load',showFamilyCare);new MutationObserver(showFamilyCare).observe(document.body,{subtree:true,childList:true});showFamilyCare();\");\nfs.writeFileSync(path.join(root,'index.html'),enhanced.replace('</body>','<script defer src=\"/elite-city-assets/family-section.js\"></script></body>'));\n"));
+          const request={project,name:dep.name,files,projectSettings:{framework:s.framework,installCommand:s.installCommand,outputDirectory:s.outputDirectory,buildCommand:s.buildCommand+' && node family-update/apply.cjs'}};
+          async function deploy(prod){const d=await api('/v13/deployments',prod?{...request,target:'production'}:request);console.log((prod?'Production ':'Preview ')+d.id);for(let i=0;i<120;i++){const check=await api('/v13/deployments/'+d.id);if(check.readyState==='READY')return d;if(['ERROR','CANCELED'].includes(check.readyState))throw Error(check.readyState+' '+(check.errorMessage||''));await new Promise(r=>setTimeout(r,3500))}throw Error('Deployment timed out')}
+          await deploy(false);if((await api('/v4/aliases/'+host)).deploymentId!==live.deploymentId)throw Error('Live version changed');const prod=await deploy(true);
+          for(let i=0;i<20&&(await api('/v4/aliases/'+host)).deploymentId!==prod.id;i++)await new Promise(r=>setTimeout(r,2000));
+          if((await api('/v4/aliases/'+host)).deploymentId!==prod.id)throw Error('Alias not promoted');
+          for(const [p,markers] of Object.entries({'/':['id="elite-family-care"','href="/admin/login"','id="services"','id="gallery"','id="contact"','tel:+919994475537'],'/admin/login':['/_next/'],'/services/patient-care-trichy':['tel:+919994475537'],...Object.fromEntries(['trichy','madurai','salem','thanjavur','pudukkottai'].map(c=>['/home-care-'+c,['care-photos','tel:+919994475537']]))})){const r=await fetch('https://'+host+p+'?release='+prod.id);const html=await r.text();if(!r.ok||markers.some(m=>!html.includes(m)))throw Error('Live check failed '+p+' '+r.status);console.log('Verified '+p)}
+          }main().catch(e=>{console.error(e.message);process.exitCode=1});
           NODE
