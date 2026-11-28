@@ -1,23 +1,38 @@
-name: Verify public city landing pages
+name: Check care photos and enquiry links
 on:
   push:
     branches: [verify/public-city-routes]
 permissions: {}
 jobs:
-  public-pages:
+  check:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 4
     steps:
-      - name: Check custom domain responses and call buttons
-        shell: bash
+      - name: Read public pages and check photo responses
+        shell: python
         run: |
-          failed=0
-          for route in / /home-care-trichy /home-care-madurai /home-care-thanjavur /home-care-salem /home-care-pudukkottai /elite-city-assets/care-call.js /elite-city-assets/elite-hero-care-v2.jpg; do
-            status=$(curl -LsS --max-time 12 -o /tmp/city.html -w '%{http_code}' "https://www.elitehomecarenursing.com$route") || status=000
-            call=no
-            if grep -Eq 'tel:[^"]*9994475537' /tmp/city.html; then call=yes; fi
-            echo "$route HTTP=$status call=$call"
-            if [[ $status != 200 ]]; then failed=1; fi
-            if [[ $route != /elite-city-assets/* && $call != yes ]]; then failed=1; fi
-          done
-          exit "$failed"
+          from urllib.request import urlopen
+          from html.parser import HTMLParser
+          class Page(HTMLParser):
+              def __init__(self):
+                  super().__init__()
+                  self.images = set()
+                  self.links = set()
+              def handle_starttag(self, tag, attrs):
+                  attrs = dict(attrs)
+                  if tag == "img": self.images.add(attrs.get("src"))
+                  if tag in ("a", "link"): self.links.add(attrs.get("href"))
+          host = "https://www.elitehomecarenursing.com"
+          photos = {"/elite-city-assets/" + name + ".jpg" for name in ("care-patient-premium", "care-elder-premium", "care-mother-newborn-v1")}
+          css = "/elite-city-assets/care-photos.css"
+          for route in ["/"] + ["/home-care-" + city for city in ("trichy", "madurai", "thanjavur", "salem", "pudukkottai")]:
+              with urlopen(host + route, timeout=12) as res: html = res.read().decode()
+              page = Page()
+              page.feed(html)
+              assert photos <= page.images and css in page.links and "tel:+919994475537" in page.links and "பின்னணியையும் சரிபார்த்த பிறகே" in html, route
+              print(route, "OK")
+          for photo in sorted(photos):
+              with urlopen(host + photo, timeout=12) as res: data = res.read()
+              assert data.startswith(bytes.fromhex("ffd8ff")) and len(data) > 1000, photo
+              print(photo, len(data))
+          with urlopen(host + css, timeout=12) as res: assert b".care-photos" in res.read()
