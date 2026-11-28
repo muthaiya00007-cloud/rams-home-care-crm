@@ -1,0 +1,48 @@
+{
+  "rewrites": [
+    {
+      "source": "/home-care-trichy",
+      "destination": "/rams-home-care/public/home-care-trichy.html"
+    },
+    {
+      "source": "/home-care-trichy.html",
+      "destination": "/rams-home-care/public/home-care-trichy.html"
+    },
+    {
+      "source": "/home-care-madurai",
+      "destination": "/rams-home-care/public/home-care-madurai.html"
+    },
+    {
+      "source": "/home-care-madurai.html",
+      "destination": "/rams-home-care/public/home-care-madurai.html"
+    },
+    {
+      "source": "/home-care-salem",
+      "destination": "/rams-home-care/public/home-care-salem.html"
+    },
+    {
+      "source": "/home-care-salem.html",
+      "destination": "/rams-home-care/public/home-care-salem.html"
+    },
+    {
+      "source": "/home-care-thanjavur",
+      "destination": "/rams-home-care/public/home-care-thanjavur.html"
+    },
+    {
+      "source": "/home-care-thanjavur.html",
+      "destination": "/rams-home-care/public/home-care-thanjavur.html"
+    },
+    {
+      "source": "/home-care-pudukkottai",
+      "destination": "/rams-home-care/public/home-care-pudukkottai.html"
+    },
+    {
+      "source": "/home-care-pudukkottai.html",
+      "destination": "/rams-home-care/public/home-care-pudukkottai.html"
+    },
+    {
+      "source": "/elite-city-assets/:file",
+      "destination": "/rams-home-care/public/elite-city-assets/:file"
+    }
+  ]
+}
